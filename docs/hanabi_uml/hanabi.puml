@@ -1,0 +1,130 @@
+@startuml hanabi
+
+interface IPlayer{
+    +getAge():int
+    +getName():String
+}
+interface ICard{
+    +getFwColor():Color
+    +getFwLevel():Integer
+}
+
+class Card {
+    - fireworkLevel: Integer
+    - fireworkColor: Color
+    ==
+    +Card(fwLevel:Integer, fwColor: Color):Card
+    +getFireworkColor():Color
+    +getFireworkLevel():Integer
+    +equal(card:Card):Bool <<override>>
+
+}
+
+enum Color {
+RED,GREEN,BLUE,WHITE,YELLOW
+}
+
+abstract class CardCollection{
+    cards:List<Card>
+    #CardCollection()
+    #CardCollection(cardList:List<Card>)
+    #takeCard(index:int):Card
+    #shuffle():void
+    +viewCard(index:int):Card
+    +putCard():Bool
+    +isEmpty():Bool
+    +size():int
+    {abstract} +isFull():int
+
+}
+
+class Deck{
+    
+   +Deck(cards:List<Card>):void
+   +isFull():Bool <<override>>
+   +dealCard():Card 
+}
+
+class DiscardStack{
+    
+    +showTopCard():Card
+    {abstract} +isFull():int
+
+}
+
+class PlayerHand{
+
+    {abstract} +isFull():int
+    + removeCard():Card
+
+}
+
+class Player{
+    -hand:PlayerHand
+    +giveCard():bool
+    +removeCard():Card
+    +inHand(card:Card)
+}
+
+class FwCastleCardStack{
+    -fwColor:Color
+    -isPlayable(card:Card):bool
+    -PlayCard(card:Card):void
+}
+
+class IssueAndClueManager{
+    - issues: int
+    - availableClues: int
+
+    +issueAndClueManager()
+    +addIssue():Boolean
+    +addClue():Boolean
+    +useClue():void
+    +isAvailableClue():Boolean
+    +isAllUnusedClue():Boolean
+
+}
+
+class TurnAndPlayerManager{
+    -players:List<Player>
+    -playerInTurn:Player
+
+
+
+}
+
+class Table {
+    -gameDeck:Deck
+    -gameDiscard:DiscardStack
+    -players:TurnAndPlayerManager
+    -fwCastles:List<FwCastleCardStack>
+    -wrongsCounter:int
+    
+    +playCard(player IPlayer,card ICard):void
+    +useClue(IPlayer player):void
+
+}
+
+'relaciones
+
+Color --* Card
+
+Card --o CardCollection
+Deck --|> CardCollection
+DiscardStack --|> CardCollection
+PlayerHand --|> CardCollection
+GameCardStack --|> CardCollection
+
+Card ..|> ICard
+Player ..|> IPlayer
+
+Table --* GameCardStack
+Table --* Deck
+Table --* DiscardStack
+Table --* Player
+
+Player --*PlayerHand
+
+
+
+@enduml
