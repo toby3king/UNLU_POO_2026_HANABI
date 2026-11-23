@@ -1,5 +1,26 @@
 @startuml hanabi
 
+enum EndGame{
+    CASTLE_COMPLETE,DECK_EMPTY,EXCED_ISSUE_LIMIT
+}
+
+enum Event{
+    MISSTAKE,GAME_OVER,PLAYER_PLAY
+}
+
+enum Color {
+RED,GREEN,BLUE,WHITE,YELLOW
+}
+
+interface IObserver{
+    + update(event: Event) : void
+}
+
+interface IObservable{
+    + addObserver(obs: IObserver): void
+    + notify(event:Event): void
+}
+
 interface IPlayer{
     +getAge():int
     +getName():String
@@ -20,12 +41,9 @@ class Card {
 
 }
 
-enum Color {
-RED,GREEN,BLUE,WHITE,YELLOW
-}
 
 abstract class CardCollection{
-    cards:List<Card>
+    -cards:List<Card>
     #CardCollection()
     #CardCollection(cardList:List<Card>)
     #takeCard(index:int):Card
@@ -40,7 +58,7 @@ abstract class CardCollection{
 
 class Deck{
     
-   +Deck(cards:List<Card>):void
+   +Deck(cards:List<Card>)
    +isFull():Bool <<override>>
    +dealCard():Card 
 }
@@ -54,16 +72,32 @@ class DiscardStack{
 
 class PlayerHand{
 
-    {abstract} +isFull():int
-    + removeCard():Card
+    +isFull():int
+    +takeCard():Card
 
 }
 
 class Player{
+    
+    static ID :int
+    
+    -playerId:int
     -hand:PlayerHand
+    -name:String
+    -age:int
+
+    
     +giveCard():bool
     +removeCard():Card
-    +inHand(card:Card)
+    +inHand(card:Card): bool
+    +remainingCards():int
+
+    +Player(edad,nombre)
+    +getName():String
+    +getId():int
+    +getAge():int
+
+    +equal(player:Player): bool
 }
 
 class FwCastleCardStack{
@@ -72,12 +106,12 @@ class FwCastleCardStack{
     -PlayCard(card:Card):void
 }
 
-class IssueAndClueManager{
+class MisstakeAndClueManager{
     - issues: int
     - availableClues: int
 
-    +issueAndClueManager()
-    +addIssue():Boolean
+    +MisstakeAndClueManager()
+    +addMisstake():Boolean
     +addClue():Boolean
     +useClue():void
     +isAvailableClue():Boolean
@@ -86,9 +120,13 @@ class IssueAndClueManager{
 }
 
 class TurnAndPlayerManager{
+    -final maxPlayers int
     -players:List<Player>
     -playerInTurn:Player
 
+    +playerInTurn():Player
+    +addPlayer(player: Player): void
+    +isAllPlayerConnected(): bool
 
 
 }
@@ -97,11 +135,29 @@ class Table {
     -gameDeck:Deck
     -gameDiscard:DiscardStack
     -players:TurnAndPlayerManager
+    -issAndCl:MisstakeAndClueManager
     -fwCastles:List<FwCastleCardStack>
-    -wrongsCounter:int
+    -observers:IObserver
     
-    +playCard(player IPlayer,card ICard):void
-    +useClue(IPlayer player):void
+    
+    +playCard(player: IPlayer,card: ICard):void
+    +useClue(player: IPlayer):void
+    +discardCard(player: IPlayer, card: ICard)
+
+    +getPlayerCards(): ICard
+    +getMisstakes(): int
+    +getDeckSize(): int
+    +getRemainingClues():int
+    +getFwCastle(color: Color): ICard
+   
+    +addPlayer(name:String age:int) : IPlayer
+    
+    
+    -gameOver(tipoDeFinal: GameOver)
+}
+
+class GameSetUp{
+
 
 }
 
@@ -109,22 +165,41 @@ class Table {
 
 Color --* Card
 
+Card ..|> ICard
 Card --o CardCollection
+
 Deck --|> CardCollection
+
 DiscardStack --|> CardCollection
+
 PlayerHand --|> CardCollection
+
 GameCardStack --|> CardCollection
 
-Card ..|> ICard
-Player ..|> IPlayer
 
-Table --* GameCardStack
-Table --* Deck
-Table --* DiscardStack
-Table --* Player
+Table *-- Deck
+Table *-- DiscardStack
+Table *-- FwCastleCardStack
+Table --> EndGame
+Table *-- MisstakeAndClueManager
+Table *-- TurnAndPlayerManager
+Table ..|> IObservable
+
+TurnAndPlayerManager *-- Player
 
 Player --*PlayerHand
+Player ..|> IPlayer
 
+IObservable --> Event
+IObserver --> Event
 
+note right of Player
+se define equals como el id, cuando se recibe un iplayer del modelo
+se le aplica equals con la list d ejugadores.
+end note
+
+note right of GameSetUp
+instancia todo crea el mazo y demas
+end note
 
 @enduml
